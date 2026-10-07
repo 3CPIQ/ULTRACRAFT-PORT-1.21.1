@@ -13,6 +13,13 @@ REPLACEMENTS = {
     "TooltipContext": "net.minecraft.item.Item.TooltipContext",
     # MinecraftClient now exposes the render tick counter through a getter.
     "MinecraftClient.getInstance().renderTickCounter.lastFrameDuration": "MinecraftClient.getInstance().getRenderTickCounter().getLastFrameDuration()",
+    # FabricItemSettings was removed; vanilla Item.Settings is used directly now.
+    "import net.fabricmc.fabric.api.item.v1.FabricItemSettings;\n": "",
+    "new FabricItemSettings()": "new net.minecraft.item.Item.Settings()",
+    # Yarn renamed DefaultParticleType to SimpleParticleType.
+    "DefaultParticleType": "SimpleParticleType",
+    # This file only needs clamp; avoid depending on Better Combat internals.
+    "import net.bettercombat.utils.MathHelper;": "import net.minecraft.util.math.MathHelper;",
 }
 
 changed = 0
