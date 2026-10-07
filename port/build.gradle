@@ -1,0 +1,65 @@
+plugins {
+    id 'fabric-loom' version '1.7.4'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+loom {
+    accessWidenerPath = file('src/main/resources/ultracraft.accesswidener')
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://maven.fabricmc.net/' }
+    maven { url 'https://maven.ladysnake.org/releases' }
+    maven { url 'https://maven.kosmx.dev/' }
+    maven { url 'https://maven.terraformersmc.com/releases/' }
+    maven { url 'https://maven.shedaniel.me/' }
+    maven { url 'https://api.modrinth.com/maven' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Core dependencies with confirmed 1.21.1 builds.
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-level:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-world:${project.cardinal_components_version}"
+    modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:${project.playeranim_version}"
+    modCompileOnly "dev.emi:trinkets:${project.trinkets_version}"
+
+    // Optional integrations are intentionally reintroduced one-by-one during the port.
+    // REI, Better Combat, Carry On, AzureLib/Goop and dynamic lights still need API migration checks.
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filteringCharset 'UTF-8'
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+def targetJavaVersion = 21
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = targetJavaVersion
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    withSourcesJar()
+}
+
+jar {
+    from('LICENSE') {
+        rename { "${it}_${project.archivesBaseName}" }
+    }
+}
