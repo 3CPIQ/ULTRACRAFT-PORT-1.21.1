@@ -29,8 +29,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // AzureLib 1.21.1 artifact. Remaining old animation API calls are migrated in source.
-    modImplementation(include('maven.modrinth:7zlUOZvb:eXbDHtlS'))
+    // Exact legacy-API Fabric build for Minecraft 1.21.1. ULTRACRAFT 1.20.1 was
+    // written against AzureLib 2.x; pin the known 2.3.28 Fabric file instead of
+    // allowing the newer 3.x animation API to leak onto the compile classpath.
+    modImplementation(include('curse.maven:azurelib-817423:5996522'))
     modImplementation(include('com.github.Chocohead:Fabric-ASM:v2.3'))
 
     // Cardinal Components is modular. ULTRACRAFT uses entity, level, world, chunk,
