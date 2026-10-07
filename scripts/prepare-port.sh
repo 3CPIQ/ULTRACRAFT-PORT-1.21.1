@@ -32,8 +32,9 @@ cp "$ROOT/port/fabric.mod.json" "$ROOT/src/main/resources/fabric.mod.json"
 # Loom 1.7.x requires Gradle 8.8+. Upstream 1.20.1 still uses 8.6.
 sed -i 's/gradle-8\.6-bin\.zip/gradle-8.8-bin.zip/' "$ROOT/gradle/wrapper/gradle-wrapper.properties"
 
-# Apply repeatable mechanical source migrations after copying upstream.
+# Apply repeatable source migrations after copying upstream.
 python3 "$ROOT/scripts/apply-source-port.py"
+python3 "$ROOT/scripts/apply-jukebox-port.py"
 
 # Overlay files that need a semantic rewrite instead of a mechanical migration.
 if [ -d "$ROOT/port/src" ]; then
