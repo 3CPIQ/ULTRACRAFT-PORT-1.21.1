@@ -1,1 +1,1 @@
-The 1.21.1 tracked-data migration needs a DataTracker.Builder signature.
+Tracked-data registration must use DataTracker.Builder in 1.21.1.
