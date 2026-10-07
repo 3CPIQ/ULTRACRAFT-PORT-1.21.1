@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  compile:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout port repository
@@ -28,5 +28,25 @@ jobs:
       - name: Show Gradle version
         run: ./gradlew --version
 
-      - name: Compile port
-        run: ./gradlew compileJava --stacktrace --continue
+      - name: Build port
+        run: ./gradlew clean build --stacktrace --continue
+
+      - name: Collect runnable JAR
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p artifact
+          find build/libs -maxdepth 1 -type f -name '*.jar' \
+            ! -name '*-sources.jar' \
+            ! -name '*-dev.jar' \
+            -exec cp {} artifact/ \;
+          ls -lah artifact
+
+      - name: Upload ULTRACRAFT 1.21.1 JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultracraft-1.21.1-port
+          path: artifact/*.jar
+          if-no-files-found: error
+          retention-days: 30
