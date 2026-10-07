@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "ultracraft",
+  "version": "${version}",
+  "name": "Ultracraft",
+  "description": "Experimental Minecraft 1.21.1 port of ULTRACRAFT.",
+  "authors": [
+    "Absolutelyaya",
+    "1.21.1 port maintained by 3CPIQ"
+  ],
+  "contact": {
+    "issues": "https://github.com/3CPIQ/ULTRACRAFT-PORT-1.21.1/issues",
+    "sources": "https://github.com/3CPIQ/ULTRACRAFT-PORT-1.21.1",
+    "homepage": "https://github.com/absolutelyaya/ultracraft"
+  },
+  "license": "MIT",
+  "icon": "assets/ultracraft/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": ["absolutelyaya.ultracraft.client.Datagen"],
+    "client": ["absolutelyaya.ultracraft.client.UltracraftClient"],
+    "main": ["absolutelyaya.ultracraft.Ultracraft"],
+    "mm:early_risers": ["absolutelyaya.ultracraft.EarlyRiser"],
+    "modmenu": ["absolutelyaya.ultracraft.client.ModMenu"],
+    "dynamiclights": ["absolutelyaya.ultracraft.compat.DynamicLightManager"],
+    "rei_client": ["absolutelyaya.ultracraft.compat.REIClientPlugin"],
+    "cardinal-components-entity": ["absolutelyaya.ultracraft.components.UltraComponents"],
+    "cardinal-components-level": ["absolutelyaya.ultracraft.components.UltraComponents"],
+    "cardinal-components-world": ["absolutelyaya.ultracraft.components.UltraComponents"],
+    "cybergrind": ["absolutelyaya.ultracraft.api.CoreCybergrindInitializer"]
+  },
+  "mixins": ["ultracraft.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.14",
+    "fabric-api": "*",
+    "minecraft": "1.21.1",
+    "java": ">=21"
+  },
+  "recommends": {
+    "modmenu": "*"
+  },
+  "custom": {
+    "cardinal-components": [
+      "ultracraft:wing_data",
+      "ultracraft:winged",
+      "ultracraft:progression",
+      "ultracraft:easter",
+      "ultracraft:arms",
+      "ultracraft:style",
+      "ultracraft:hivel",
+      "ultracraft:loadout",
+      "ultracraft:editor",
+      "ultracraft:level",
+      "ultracraft:global_data",
+      "ultracraft:dimension_data",
+      "ultracraft:living"
+    ]
+  },
+  "accessWidener": "ultracraft.accesswidener"
+}
