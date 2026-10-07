@@ -20,6 +20,10 @@ REPLACEMENTS = {
     "DefaultParticleType": "SimpleParticleType",
     # This file only needs clamp; avoid depending on Better Combat internals.
     "import net.bettercombat.utils.MathHelper;": "import net.minecraft.util.math.MathHelper;",
+    # Goop 1.21.1 reorganized particles under absolutelyaya.goop.particle.
+    "import absolutelyaya.goop.api.WaterHandling;\n": "",
+    "import absolutelyaya.goop.particles.GoopDropParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
+    "import absolutelyaya.goop.particles.GoopStringParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
 }
 
 changed = 0
@@ -37,6 +41,19 @@ for path in JAVA.rglob("*.java"):
     )
     new = new.replace("super.appendTooltip(stack, world, tooltip, context);", "super.appendTooltip(stack, context, tooltip, type);")
     new = new.replace("context.isAdvanced()", "type.isAdvanced()")
+
+    # Goop 1.21.1 replaced the old Vec3d + WaterHandling drip/string effects
+    # with a compact ARGB DripParticleEffect. Preserve ULTRACRAFT's blood color.
+    new = re.sub(
+        r"new GoopDropParticleEffect\(new Vec3d\(0\.56,\s*0\.09,\s*0\.01\),\s*([^,\n]+),\s*true,\s*WaterHandling\.REPLACE_WITH_CLOUD_PARTICLE\)",
+        r"new DripParticleEffect(0xFF8F1703, \1, true)",
+        new,
+    )
+    new = re.sub(
+        r"new GoopStringParticleEffect\(new Vec3d\(0\.56,\s*0\.09,\s*0\.01\),\s*([^,\n]+),\s*true\)",
+        r"new DripParticleEffect(0xFF8F1703, \1, true)",
+        new,
+    )
 
     if new != text:
         path.write_text(new, encoding="utf-8")
