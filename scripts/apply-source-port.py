@@ -17,6 +17,8 @@ REPLACEMENTS = {
     "import net.minecraft.client.sound.MusicType;": "import net.minecraft.sound.MusicType;",
     "import net.minecraft.block.AbstractGlassBlock;": "import net.minecraft.block.TransparentBlock;",
     "extends AbstractGlassBlock": "extends TransparentBlock",
+    ".getDimensions(EntityPose.STANDING).width": ".getDimensions(EntityPose.STANDING).width()",
+    ".getDimensions(EntityPose.STANDING).height": ".getDimensions(EntityPose.STANDING).height()",
     "import absolutelyaya.goop.api.WaterHandling;\n": "",
     "import absolutelyaya.goop.particles.GoopDropParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
     "import absolutelyaya.goop.particles.GoopStringParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
@@ -56,6 +58,18 @@ for path in JAVA.rglob("*.java"):
     )
     new = new.replace("super.appendTooltip(stack, world, tooltip, context);", "super.appendTooltip(stack, context, tooltip, type);")
     new = new.replace("context.isAdvanced()", "type.isAdvanced()")
+
+    # Minecraft 1.21 moved entity tracked-data registration to DataTracker.Builder.
+    new = re.sub(
+        r"(protected\\s+void\\s+initDataTracker\\s*\\(\\s*\\)\\s*\\{)",
+        "protected void initDataTracker(net.minecraft.entity.data.DataTracker.Builder builder) {",
+        new,
+    )
+    new = new.replace("super.initDataTracker();", "super.initDataTracker(builder);")
+    new = re.sub(r"dataTracker\\.startTracking\\(([^;]+)\\);", r"builder.add(\\1);", new)
+
+    # Identifier constructors became factories in 1.21.
+    new = re.sub(r"new Identifier\\(([^,()]+),\\s*([^()]+?)\\)", r"Identifier.of(\\1, \\2)", new)
 
     new = re.sub(
         r"new GoopDropParticleEffect\(new Vec3d\(0\.56,\s*0\.09,\s*0\.01\),\s*([^,\n]+),\s*true,\s*WaterHandling\.REPLACE_WITH_CLOUD_PARTICLE\)",
