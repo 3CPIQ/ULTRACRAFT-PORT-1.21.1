@@ -2,19 +2,19 @@ $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $Temp = Join-Path $Root '.upstream-ultracraft'
+$Protected = @('port','scripts','.github','README.md','PORTING.md')
 
 if (Test-Path $Temp) { Remove-Item $Temp -Recurse -Force }
 
 git clone --depth 1 --branch fabric-1.20.1 https://github.com/absolutelyaya/ultracraft.git $Temp
 
 Get-ChildItem $Temp -Force | Where-Object { $_.Name -ne '.git' } | ForEach-Object {
+    if ($_.Name -in $Protected) { return }
     $dest = Join-Path $Root $_.Name
-    if (Test-Path $dest -and $_.Name -notin @('port','scripts','.github','README.md','PORTING.md')) {
+    if (Test-Path $dest) {
         Remove-Item $dest -Recurse -Force
     }
-    if ($_.Name -notin @('port','scripts','.github','README.md','PORTING.md')) {
-        Copy-Item $_.FullName $dest -Recurse -Force
-    }
+    Copy-Item $_.FullName $dest -Recurse -Force
 }
 
 Copy-Item (Join-Path $Root 'port\gradle.properties') (Join-Path $Root 'gradle.properties') -Force
