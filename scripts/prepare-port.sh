@@ -34,6 +34,7 @@ sed -i 's/gradle-8\.6-bin\.zip/gradle-8.8-bin.zip/' "$ROOT/gradle/wrapper/gradle
 
 # Apply repeatable source migrations after copying upstream.
 python3 "$ROOT/scripts/apply-source-port.py"
+python3 "$ROOT/scripts/repair-tracked-data.py"
 python3 "$ROOT/scripts/apply-jukebox-port.py"
 
 # Overlay files that need a semantic rewrite instead of a mechanical migration.
