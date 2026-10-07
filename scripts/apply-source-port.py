@@ -24,19 +24,27 @@ REPLACEMENTS = {
     "import absolutelyaya.goop.api.WaterHandling;\n": "",
     "import absolutelyaya.goop.particles.GoopDropParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
     "import absolutelyaya.goop.particles.GoopStringParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
-    # AzureLib 2.3.28 kept the legacy Geo API for 1.21.1 but reorganized its
-    # public compatibility classes into common/api and common/internal packages.
+    # AzureLib 2.3.28 kept the legacy Geo API for 1.21.1 but reorganized it.
     "mod.azure.azurelib.animatable.GeoEntity": "mod.azure.azurelib.common.api.common.animatable.GeoEntity",
     "mod.azure.azurelib.animatable.GeoItem": "mod.azure.azurelib.common.api.common.animatable.GeoItem",
     "mod.azure.azurelib.animatable.GeoBlockEntity": "mod.azure.azurelib.common.api.common.animatable.GeoBlockEntity",
     "mod.azure.azurelib.animatable.SingletonGeoAnimatable": "mod.azure.azurelib.common.internal.common.animatable.SingletonGeoAnimatable",
     "mod.azure.azurelib.animatable.client.RenderProvider": "mod.azure.azurelib.common.internal.client.RenderProvider",
     "mod.azure.azurelib.util.AzureLibUtil": "mod.azure.azurelib.common.internal.common.util.AzureLibUtil",
+    "mod.azure.azurelib.constant.DataTickets": "mod.azure.azurelib.common.internal.common.constant.DataTickets",
+    "mod.azure.azurelib.model.data.EntityModelData": "mod.azure.azurelib.common.internal.client.model.data.EntityModelData",
+    "mod.azure.azurelib.cache.object.GeoBone": "mod.azure.azurelib.common.internal.common.cache.object.GeoBone",
+    "mod.azure.azurelib.cache.object.BakedGeoModel": "mod.azure.azurelib.common.internal.common.cache.object.BakedGeoModel",
     "mod.azure.azurelib.model.GeoModel": "mod.azure.azurelib.common.api.client.model.GeoModel",
+    "mod.azure.azurelib.model.DefaultedItemGeoModel": "mod.azure.azurelib.common.api.client.model.DefaultedItemGeoModel",
+    "mod.azure.azurelib.model.DefaultedBlockGeoModel": "mod.azure.azurelib.common.api.client.model.DefaultedBlockGeoModel",
     "mod.azure.azurelib.renderer.GeoEntityRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoEntityRenderer",
     "mod.azure.azurelib.renderer.GeoItemRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoItemRenderer",
     "mod.azure.azurelib.renderer.GeoBlockRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoBlockRenderer",
     "mod.azure.azurelib.renderer.GeoArmorRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoArmorRenderer",
+    "mod.azure.azurelib.renderer.GeoRenderer": "mod.azure.azurelib.common.internal.client.renderer.GeoRenderer",
+    "mod.azure.azurelib.renderer.layer.GeoRenderLayer": "mod.azure.azurelib.common.api.client.renderer.layer.GeoRenderLayer",
+    "mod.azure.azurelib.renderer.layer.BlockAndItemGeoLayer": "mod.azure.azurelib.common.api.client.renderer.layer.BlockAndItemGeoLayer",
 }
 
 changed = 0
@@ -114,17 +122,39 @@ for path, rules in teleport_files.items():
         path.write_text(new, encoding="utf-8")
         changed += 1
 
+# Optional integration mixins target old Carry On / YIGD internals that no
+# longer exist in the 1.21.1 dependency versions. Disable them for the base port.
+mixins = ROOT / "src" / "main" / "resources" / "ultracraft.mixins.json"
+if mixins.exists():
+    text = mixins.read_text(encoding="utf-8")
+    new = text
+    for entry in (
+        '    "compat.carryon.PickupHandlerMixin",\n',
+        '    "compat.carryon.PlacementHandlerMixin",\n',
+        '    "compat.yigd.DeathHandlerMixin"\n',
+        '    "compat.yigd.DeathHandlerMixin",\n',
+    ):
+        new = new.replace(entry, "")
+    new = new.replace('"compat.carryon.PlacementHandlerMixin"\n', '"compat.carryon.PlacementHandlerMixin"\n')
+    # Clean a possible trailing comma left by removing the final mixin.
+    new = new.replace('"client.PlayerInventoryMixin",\n  ],', '"client.PlayerInventoryMixin"\n  ],')
+    new = new.replace('"WorldMixin",\n  ],', '"WorldMixin"\n  ],')
+    new = new.replace('"compat.carryon.PlacementHandlerMixin",\n  ],', '"compat.carryon.PlacementHandlerMixin"\n  ],')
+    new = new.replace('"compat.carryon.PickupHandlerMixin",\n  ],', '"compat.carryon.PickupHandlerMixin"\n  ],')
+    new = new.replace('"compat.yigd.DeathHandlerMixin",\n  ],', '"compat.yigd.DeathHandlerMixin"\n  ],')
+    new = new.replace('"compat.yigd.DeathHandlerMixin"\n  ],', '"WorldMixin"\n  ],')
+    if new != text:
+        mixins.write_text(new, encoding="utf-8")
+
 # The old direct MinecraftClient.renderTickCounter access is no longer needed
-# after switching to MinecraftClient#getRenderTickCounter(). Remove the obsolete
-# access widener entry so Loom can validate the 1.21.1 mappings.
-aw = ROOT / "src" / "main" / "resources" / "ultracraft.accesswidener"
-if aw.exists():
-    text = aw.read_text(encoding="utf-8")
+after = ROOT / "src" / "main" / "resources" / "ultracraft.accesswidener"
+if after.exists():
+    text = after.read_text(encoding="utf-8")
     new = text.replace(
         "accessible field net/minecraft/client/MinecraftClient renderTickCounter Lnet/minecraft/client/render/RenderTickCounter;\n",
         "",
     )
     if new != text:
-        aw.write_text(new, encoding="utf-8")
+        after.write_text(new, encoding="utf-8")
 
 print(f"Applied 1.21.1 source migrations to {changed} Java files.")
