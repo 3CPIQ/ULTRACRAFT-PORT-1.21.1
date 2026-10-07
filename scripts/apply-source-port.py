@@ -24,6 +24,19 @@ REPLACEMENTS = {
     "import absolutelyaya.goop.api.WaterHandling;\n": "",
     "import absolutelyaya.goop.particles.GoopDropParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
     "import absolutelyaya.goop.particles.GoopStringParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
+    # AzureLib 2.3.28 kept the legacy Geo API for 1.21.1 but reorganized its
+    # public compatibility classes into common/api and common/internal packages.
+    "mod.azure.azurelib.animatable.GeoEntity": "mod.azure.azurelib.common.api.common.animatable.GeoEntity",
+    "mod.azure.azurelib.animatable.GeoItem": "mod.azure.azurelib.common.api.common.animatable.GeoItem",
+    "mod.azure.azurelib.animatable.GeoBlockEntity": "mod.azure.azurelib.common.api.common.animatable.GeoBlockEntity",
+    "mod.azure.azurelib.animatable.SingletonGeoAnimatable": "mod.azure.azurelib.common.internal.common.animatable.SingletonGeoAnimatable",
+    "mod.azure.azurelib.animatable.client.RenderProvider": "mod.azure.azurelib.common.internal.client.RenderProvider",
+    "mod.azure.azurelib.util.AzureLibUtil": "mod.azure.azurelib.common.internal.common.util.AzureLibUtil",
+    "mod.azure.azurelib.model.GeoModel": "mod.azure.azurelib.common.api.client.model.GeoModel",
+    "mod.azure.azurelib.renderer.GeoEntityRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoEntityRenderer",
+    "mod.azure.azurelib.renderer.GeoItemRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoItemRenderer",
+    "mod.azure.azurelib.renderer.GeoBlockRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoBlockRenderer",
+    "mod.azure.azurelib.renderer.GeoArmorRenderer": "mod.azure.azurelib.common.api.client.renderer.GeoArmorRenderer",
 }
 
 changed = 0
