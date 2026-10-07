@@ -29,5 +29,8 @@ cp "$ROOT/port/settings.gradle" "$ROOT/settings.gradle"
 cp "$ROOT/port/build.gradle" "$ROOT/build.gradle"
 cp "$ROOT/port/fabric.mod.json" "$ROOT/src/main/resources/fabric.mod.json"
 
+# Loom 1.7.x requires Gradle 8.8+. Upstream 1.20.1 still uses 8.6.
+sed -i 's/gradle-8\.6-bin\.zip/gradle-8.8-bin.zip/' "$ROOT/gradle/wrapper/gradle-wrapper.properties"
+
 echo "Prepared ULTRACRAFT upstream source with the Fabric 1.21.1 port overlay."
 echo "Next: ./gradlew compileJava --continue"
