@@ -29,12 +29,20 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Keep the 2.x API ULTRACRAFT was written against; 2.3.28 supports Fabric 1.21.1.
+    // AzureLib 1.21.1 artifact. Remaining old animation API calls are migrated in source.
     modImplementation(include('maven.modrinth:7zlUOZvb:eXbDHtlS'))
     modImplementation(include('com.github.Chocohead:Fabric-ASM:v2.3'))
 
-    // Core dependencies with 1.21.1 builds.
-    modImplementation "maven.modrinth:K01OU20C:tVPYyTPV"
+    // Cardinal Components is modular. ULTRACRAFT uses entity, level, world, chunk,
+    // scoreboard and block components directly, so keep every used API on the compile path.
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-level:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-world:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-chunk:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-scoreboard:${project.cardinal_components_version}"
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-block:${project.cardinal_components_version}"
+
     modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:${project.playeranim_version}"
     modCompileOnly "dev.emi:trinkets:${project.trinkets_version}"
 
