@@ -29,14 +29,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Exact legacy-API Fabric build for Minecraft 1.21.1. ULTRACRAFT 1.20.1 was
-    // written against AzureLib 2.x; pin the known 2.3.28 Fabric file instead of
-    // allowing the newer 3.x animation API to leak onto the compile classpath.
     modImplementation(include('curse.maven:azurelib-817423:5996522'))
     modImplementation(include('com.github.Chocohead:Fabric-ASM:v2.3'))
 
-    // Cardinal Components is modular. ULTRACRAFT uses entity, level, world, chunk,
-    // scoreboard and block components directly, so keep every used API on the compile path.
     modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cardinal_components_version}"
     modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cardinal_components_version}"
     modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-level:${project.cardinal_components_version}"
@@ -47,14 +42,8 @@ dependencies {
 
     modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:${project.playeranim_version}"
     modCompileOnly "dev.emi:trinkets:${project.trinkets_version}"
-
-    // ULTRACRAFT directly references GOOP effects; use its native 1.21.1 Fabric build.
     modImplementation "maven.modrinth:S8fWq3KT:CmNEu1jv"
-
-    // Optional dynamic-light integration is compiled against the 1.21.1 API without forcing it at runtime.
     modCompileOnly "maven.modrinth:yBW8D80W:jMgX3AR4"
-
-    // Config/UI dependencies used directly by source.
     modApi "me.shedaniel.cloth:cloth-config-fabric:15.0.140"
     modApi "com.terraformersmc:modmenu:11.0.3"
 }
@@ -72,6 +61,7 @@ def targetJavaVersion = 21
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = targetJavaVersion
+    options.compilerArgs += ['-Xmaxerrs', '1000']
 }
 
 java {
