@@ -41,6 +41,12 @@ dependencies {
     modImplementation "dev.kosmx.player-anim:player-animation-lib-fabric:${project.playeranim_version}"
     modCompileOnly "dev.emi:trinkets:${project.trinkets_version}"
 
+    // ULTRACRAFT directly references GOOP effects; use its native 1.21.1 Fabric build.
+    modImplementation "maven.modrinth:S8fWq3KT:CmNEu1jv"
+
+    // Optional dynamic-light integration is compiled against the 1.21.1 API without forcing it at runtime.
+    modCompileOnly "maven.modrinth:yBW8D80W:kuX6nw8R"
+
     // Config/UI dependencies used directly by source.
     modApi "me.shedaniel.cloth:cloth-config-fabric:15.0.140"
     modApi "com.terraformersmc:modmenu:11.0.3"
