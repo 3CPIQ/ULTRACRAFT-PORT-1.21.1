@@ -1,0 +1,32 @@
+name: ULTRACRAFT 1.21.1 Port Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout port repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Prepare upstream source
+        run: bash scripts/prepare-port.sh
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Show Gradle version
+        run: ./gradlew --version
+
+      - name: Compile port
+        run: ./gradlew compileJava --stacktrace --continue
