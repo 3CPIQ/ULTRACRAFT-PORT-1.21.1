@@ -6,25 +6,20 @@ ROOT = Path(__file__).resolve().parents[1]
 JAVA = ROOT / "src" / "main" / "java"
 
 REPLACEMENTS = {
-    # Cardinal Components moved Java packages for the 1.21.x line.
     "dev.onyxstudios.cca": "org.ladysnake.cca",
-    # TooltipContext became Item.TooltipContext in 1.21.
     "import net.minecraft.client.item.TooltipContext;": "import net.minecraft.item.tooltip.TooltipType;",
     "TooltipContext": "net.minecraft.item.Item.TooltipContext",
-    # MinecraftClient now exposes the render tick counter through a getter.
     "MinecraftClient.getInstance().renderTickCounter.lastFrameDuration": "MinecraftClient.getInstance().getRenderTickCounter().getLastFrameDuration()",
-    # FabricItemSettings was removed; vanilla Item.Settings is used directly now.
     "import net.fabricmc.fabric.api.item.v1.FabricItemSettings;\n": "",
     "new FabricItemSettings()": "new net.minecraft.item.Item.Settings()",
-    # Yarn renamed DefaultParticleType to SimpleParticleType.
     "DefaultParticleType": "SimpleParticleType",
-    # This file only needs clamp; avoid depending on Better Combat internals.
     "import net.bettercombat.utils.MathHelper;": "import net.minecraft.util.math.MathHelper;",
-    # Goop 1.21.1 reorganized particles under absolutelyaya.goop.particle.
+    "import net.minecraft.client.sound.MusicType;": "import net.minecraft.sound.MusicType;",
+    "import net.minecraft.block.AbstractGlassBlock;": "import net.minecraft.block.TransparentBlock;",
+    "extends AbstractGlassBlock": "extends TransparentBlock",
     "import absolutelyaya.goop.api.WaterHandling;\n": "",
     "import absolutelyaya.goop.particles.GoopDropParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
     "import absolutelyaya.goop.particles.GoopStringParticleEffect;": "import absolutelyaya.goop.particle.DripParticleEffect;",
-    # AzureLib 2.3.28 kept the legacy Geo API for 1.21.1 but reorganized it.
     "mod.azure.azurelib.animatable.GeoEntity": "mod.azure.azurelib.common.api.common.animatable.GeoEntity",
     "mod.azure.azurelib.animatable.GeoItem": "mod.azure.azurelib.common.api.common.animatable.GeoItem",
     "mod.azure.azurelib.animatable.GeoBlockEntity": "mod.azure.azurelib.common.api.common.animatable.GeoBlockEntity",
@@ -54,7 +49,6 @@ for path in JAVA.rglob("*.java"):
     for old, replacement in REPLACEMENTS.items():
         new = new.replace(old, replacement)
 
-    # 1.20.x Item/Block tooltip override -> 1.21.1 signature.
     new = re.sub(
         r"appendTooltip\(ItemStack stack,\s*(?:@Nullable\s+)?World world,\s*List<Text> tooltip,\s*net\.minecraft\.item\.Item\.TooltipContext context\)",
         "appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, TooltipType type)",
@@ -63,8 +57,6 @@ for path in JAVA.rglob("*.java"):
     new = new.replace("super.appendTooltip(stack, world, tooltip, context);", "super.appendTooltip(stack, context, tooltip, type);")
     new = new.replace("context.isAdvanced()", "type.isAdvanced()")
 
-    # Goop 1.21.1 replaced the old Vec3d + WaterHandling drip/string effects
-    # with a compact ARGB DripParticleEffect. Preserve ULTRACRAFT's blood color.
     new = re.sub(
         r"new GoopDropParticleEffect\(new Vec3d\(0\.56,\s*0\.09,\s*0\.01\),\s*([^,\n]+),\s*true,\s*WaterHandling\.REPLACE_WITH_CLOUD_PARTICLE\)",
         r"new DripParticleEffect(0xFF8F1703, \1, true)",
@@ -80,8 +72,6 @@ for path in JAVA.rglob("*.java"):
         path.write_text(new, encoding="utf-8")
         changed += 1
 
-# FabricDimensions was removed in Fabric API for 1.21; ServerPlayerEntity has
-# native cross-dimension teleport methods now.
 teleport_files = {
     JAVA / "absolutelyaya/ultracraft/dimension/LevelManager.java": [
         (
@@ -122,39 +112,41 @@ for path, rules in teleport_files.items():
         path.write_text(new, encoding="utf-8")
         changed += 1
 
-# Optional integration mixins target old Carry On / YIGD internals that no
-# longer exist in the 1.21.1 dependency versions. Disable them for the base port.
-mixins = ROOT / "src" / "main" / "resources" / "ultracraft.mixins.json"
+# Optional integrations can be restored after the core 1.21.1 port is stable.
+for relative in (
+    "absolutelyaya/ultracraft/mixin/compat/carryon/PickupHandlerMixin.java",
+    "absolutelyaya/ultracraft/mixin/compat/carryon/PlacementHandlerMixin.java",
+    "absolutelyaya/ultracraft/mixin/compat/yigd/DeathHandlerMixin.java",
+    "absolutelyaya/ultracraft/compat/REIClientPlugin.java",
+):
+    (JAVA / relative).unlink(missing_ok=True)
+
+mixins = ROOT / "src/main/resources/ultracraft.mixins.json"
 if mixins.exists():
     text = mixins.read_text(encoding="utf-8")
-    new = text
-    for entry in (
-        '    "compat.carryon.PickupHandlerMixin",\n',
-        '    "compat.carryon.PlacementHandlerMixin",\n',
-        '    "compat.yigd.DeathHandlerMixin"\n',
-        '    "compat.yigd.DeathHandlerMixin",\n',
+    for name in (
+        "compat.carryon.PickupHandlerMixin",
+        "compat.carryon.PlacementHandlerMixin",
+        "compat.yigd.DeathHandlerMixin",
     ):
-        new = new.replace(entry, "")
-    new = new.replace('"compat.carryon.PlacementHandlerMixin"\n', '"compat.carryon.PlacementHandlerMixin"\n')
-    # Clean a possible trailing comma left by removing the final mixin.
-    new = new.replace('"client.PlayerInventoryMixin",\n  ],', '"client.PlayerInventoryMixin"\n  ],')
-    new = new.replace('"WorldMixin",\n  ],', '"WorldMixin"\n  ],')
-    new = new.replace('"compat.carryon.PlacementHandlerMixin",\n  ],', '"compat.carryon.PlacementHandlerMixin"\n  ],')
-    new = new.replace('"compat.carryon.PickupHandlerMixin",\n  ],', '"compat.carryon.PickupHandlerMixin"\n  ],')
-    new = new.replace('"compat.yigd.DeathHandlerMixin",\n  ],', '"compat.yigd.DeathHandlerMixin"\n  ],')
-    new = new.replace('"compat.yigd.DeathHandlerMixin"\n  ],', '"WorldMixin"\n  ],')
-    if new != text:
-        mixins.write_text(new, encoding="utf-8")
+        text = re.sub(rf'\s*"{re.escape(name)}",?', "", text)
+    text = re.sub(r',\s*]', '\n  ]', text)
+    mixins.write_text(text, encoding="utf-8")
 
-# The old direct MinecraftClient.renderTickCounter access is no longer needed
-after = ROOT / "src" / "main" / "resources" / "ultracraft.accesswidener"
-if after.exists():
-    text = after.read_text(encoding="utf-8")
-    new = text.replace(
+mod_json = ROOT / "src/main/resources/fabric.mod.json"
+if mod_json.exists():
+    text = mod_json.read_text(encoding="utf-8")
+    text = re.sub(r'\s*"rei_client"\s*:\s*\[\s*"absolutelyaya\.ultracraft\.compat\.REIClientPlugin"\s*]\s*,?', "", text)
+    text = re.sub(r'}\s*"cardinal-components-entity"', '},\n    "cardinal-components-entity"', text)
+    mod_json.write_text(text, encoding="utf-8")
+
+aw = ROOT / "src/main/resources/ultracraft.accesswidener"
+if aw.exists():
+    text = aw.read_text(encoding="utf-8")
+    text = text.replace(
         "accessible field net/minecraft/client/MinecraftClient renderTickCounter Lnet/minecraft/client/render/RenderTickCounter;\n",
         "",
     )
-    if new != text:
-        after.write_text(new, encoding="utf-8")
+    aw.write_text(text, encoding="utf-8")
 
 print(f"Applied 1.21.1 source migrations to {changed} Java files.")
