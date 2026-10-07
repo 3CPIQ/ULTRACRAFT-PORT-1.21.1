@@ -42,5 +42,7 @@ if [ -d "$ROOT/port/src" ]; then
   rsync -a "$ROOT/port/src/" "$ROOT/src/"
 fi
 
+python3 "$ROOT/scripts/repair-121-apis.py"
+
 echo "Prepared ULTRACRAFT upstream source with the Fabric 1.21.1 port overlay."
 echo "Next: ./gradlew clean build --continue"
