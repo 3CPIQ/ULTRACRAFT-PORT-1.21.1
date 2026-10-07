@@ -6,8 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 JAVA = ROOT / "src" / "main" / "java"
 
 REPLACEMENTS = {
-    # Cardinal Components moved packages for the 1.21.x line.
+    # Cardinal Components moved Java packages for the 1.21.x line.
     "dev.onyxstudios.cca": "org.ladysnake.cca",
+    # TooltipContext became Item.TooltipContext in 1.21.
+    "import net.minecraft.client.item.TooltipContext;": "import net.minecraft.item.tooltip.TooltipType;",
+    "TooltipContext": "net.minecraft.item.Item.TooltipContext",
+    # MinecraftClient now exposes the render tick counter through a getter.
+    "MinecraftClient.getInstance().renderTickCounter.lastFrameDuration": "MinecraftClient.getInstance().getRenderTickCounter().getLastFrameDuration()",
 }
 
 changed = 0
@@ -16,6 +21,16 @@ for path in JAVA.rglob("*.java"):
     new = text
     for old, replacement in REPLACEMENTS.items():
         new = new.replace(old, replacement)
+
+    # 1.20.x Item/Block tooltip override -> 1.21.1 signature.
+    new = re.sub(
+        r"appendTooltip\(ItemStack stack,\s*(?:@Nullable\s+)?World world,\s*List<Text> tooltip,\s*net\.minecraft\.item\.Item\.TooltipContext context\)",
+        "appendTooltip(ItemStack stack, net.minecraft.item.Item.TooltipContext context, List<Text> tooltip, TooltipType type)",
+        new,
+    )
+    new = new.replace("super.appendTooltip(stack, world, tooltip, context);", "super.appendTooltip(stack, context, tooltip, type);")
+    new = new.replace("context.isAdvanced()", "type.isAdvanced()")
+
     if new != text:
         path.write_text(new, encoding="utf-8")
         changed += 1
@@ -61,5 +76,18 @@ for path, rules in teleport_files.items():
     if new != text:
         path.write_text(new, encoding="utf-8")
         changed += 1
+
+# The old direct MinecraftClient.renderTickCounter access is no longer needed
+# after switching to MinecraftClient#getRenderTickCounter(). Remove the obsolete
+# access widener entry so Loom can validate the 1.21.1 mappings.
+aw = ROOT / "src" / "main" / "resources" / "ultracraft.accesswidener"
+if aw.exists():
+    text = aw.read_text(encoding="utf-8")
+    new = text.replace(
+        "accessible field net/minecraft/client/MinecraftClient renderTickCounter Lnet/minecraft/client/render/RenderTickCounter;\n",
+        "",
+    )
+    if new != text:
+        aw.write_text(new, encoding="utf-8")
 
 print(f"Applied 1.21.1 source migrations to {changed} Java files.")
