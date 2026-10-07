@@ -30,7 +30,7 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // Keep the 2.x API ULTRACRAFT was written against; 2.3.28 supports Fabric 1.21.1.
-    modImplementation(include('maven.modrinth:7zlUOZvb:eXbDHtlS'))
+    modImplementation(include('curse.maven:azurelib-817423:5996522'))
     modImplementation(include('com.github.Chocohead:Fabric-ASM:v2.3'))
 
     // Core dependencies with 1.21.1 builds.
