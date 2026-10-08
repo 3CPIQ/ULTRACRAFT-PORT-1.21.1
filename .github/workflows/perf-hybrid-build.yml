@@ -1,0 +1,71 @@
+name: Ultracraft Hybrid Performance Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/perf-hybrid-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout helper repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Clone hybrid Ultracraft upstream
+        run: git clone --depth 1 https://github.com/alfr0762/ultracraft.git upstream
+
+      - name: Apply V1 performance patch
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('upstream/fabric/src/main/java/dev/ultracraft/WorldMesh.java')
+          s = p.read_text(encoding='utf-8')
+          changes = {
+              'private static final int RH = 8;': 'private static final int RH = 4;',
+              'return Math.max(4, Math.min(RH, UltracraftConfig.terrainRange / 16));': 'return Math.max(2, Math.min(RH, UltracraftConfig.terrainRange / 16));',
+              'private static final int RV = 4;': 'private static final int RV = 3;',
+              'private static final int AH = 1, A_BELOW = 2, A_ABOVE = 1, MAX_ANCHORS = 24;': 'private static final int AH = 1, A_BELOW = 1, A_ABOVE = 1, MAX_ANCHORS = 8;',
+              'private static final long BUDGET_NANOS = 3_000_000L;': 'private static final long BUDGET_NANOS = 1_000_000L;',
+              'if (++ticks % 20 == 0) {': 'if (++ticks % 10 == 0) {'
+          }
+          for old, new in changes.items():
+              if old not in s:
+                  raise SystemExit(f'Expected source text not found: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s, encoding='utf-8')
+          print('Patched WorldMesh.java for bounded terrain workload')
+
+      - name: Build optimized Fabric jars
+        working-directory: upstream/fabric
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --stacktrace
+          ./gradlew clean build -Pmc=1.20.1 --stacktrace
+
+      - name: Collect jars
+        shell: bash
+        run: |
+          mkdir -p artifact
+          find upstream/fabric/build -type f -path '*/libs/*.jar' \
+            ! -name '*-sources.jar' \
+            ! -name '*-dev.jar' \
+            -exec cp {} artifact/ \;
+          ls -lah artifact
+
+      - name: Upload optimized jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: ultracraft-v1-performance-custom
+          path: artifact/*.jar
+          if-no-files-found: error
+          retention-days: 30
