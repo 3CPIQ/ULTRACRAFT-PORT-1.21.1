@@ -28,6 +28,8 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
+          import re
+
           p = Path('upstream/fabric/src/main/java/dev/ultracraft/WorldMesh.java')
           s = p.read_text(encoding='utf-8')
           changes = {
@@ -43,14 +45,24 @@ jobs:
                   raise SystemExit(f'Expected source text not found: {old}')
               s = s.replace(old, new, 1)
           p.write_text(s, encoding='utf-8')
-          print('Patched WorldMesh.java for bounded terrain workload')
+
+          # CI has no local ULTRAKILL/BepInEx install. Build only the Fabric half;
+          # the user's already-installed UltraBridge DLL is intentionally left untouched.
+          g = Path('upstream/fabric/build.gradle')
+          t = g.read_text(encoding='utf-8')
+          pattern = r'\tdoFirst \{\n\t\tif \(!new File\(bepinex, "BepInEx/core/BepInEx\.dll"\)\.isFile\(\)\) \{.*?\n\t\tif \(!bridge\.isFile\(\)\) throw new GradleException\("build the UltraBridge plugin first: \$\{bridge\} is missing"\)\n\t\}'
+          t2, n = re.subn(pattern, '\tdoFirst { }', t, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('Could not disable local UltraBridge/BepInEx bundling check')
+          g.write_text(t2, encoding='utf-8')
+          print('Patched WorldMesh.java and CI-only resource bundling check')
 
       - name: Build optimized Fabric jars
         working-directory: upstream/fabric
         run: |
           chmod +x gradlew
-          ./gradlew clean build --stacktrace
-          ./gradlew clean build -Pmc=1.20.1 --stacktrace
+          ./gradlew clean remapJar --stacktrace
+          ./gradlew clean remapJar -Pmc=1.20.1 --stacktrace
 
       - name: Collect jars
         shell: bash
