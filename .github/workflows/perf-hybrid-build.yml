@@ -61,8 +61,20 @@ jobs:
         working-directory: upstream/fabric
         run: |
           chmod +x gradlew
-          ./gradlew clean remapJar --stacktrace
-          ./gradlew clean remapJar -Pmc=1.20.1 --stacktrace
+          rm -rf build
+          ./gradlew remapJar --stacktrace
+          ./gradlew remapJar -Pmc=1.20.1 --stacktrace
+
+      - name: Verify jars contain compiled mod classes
+        shell: bash
+        run: |
+          set -e
+          for jar in upstream/fabric/build/*/libs/*.jar; do
+            case "$jar" in *-sources.jar|*-dev.jar) continue ;; esac
+            echo "Checking $jar"
+            jar tf "$jar" | grep -q '^dev/ultracraft/WorldMesh.class$'
+            jar tf "$jar" | grep -q '^dev/ultracraft/Ultracraft.class$'
+          done
 
       - name: Collect jars
         shell: bash
