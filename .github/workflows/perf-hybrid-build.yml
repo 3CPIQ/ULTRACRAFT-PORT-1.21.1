@@ -47,7 +47,7 @@ jobs:
           p.write_text(s, encoding='utf-8')
 
           # CI has no local ULTRAKILL/BepInEx install. Build only the Fabric half;
-          # the user's already-installed UltraBridge DLL is intentionally left untouched.
+          # the user's existing UltraBridge/BepInEx installation is intentionally left untouched.
           g = Path('upstream/fabric/build.gradle')
           t = g.read_text(encoding='utf-8')
           pattern = r'\tdoFirst \{\n\t\tif \(!new File\(bepinex, "BepInEx/core/BepInEx\.dll"\)\.isFile\(\)\) \{.*?\n\t\tif \(!bridge\.isFile\(\)\) throw new GradleException\("build the UltraBridge plugin first: \$\{bridge\} is missing"\)\n\t\}'
@@ -57,39 +57,41 @@ jobs:
           g.write_text(t2, encoding='utf-8')
           print('Patched WorldMesh.java and CI-only resource bundling check')
 
-      - name: Build optimized Fabric jars
+      - name: Build optimized Fabric 1.20.1 jar
         working-directory: upstream/fabric
         run: |
           chmod +x gradlew
           rm -rf build
-          ./gradlew remapJar --stacktrace
           ./gradlew remapJar -Pmc=1.20.1 --stacktrace
 
-      - name: Verify jars contain compiled mod classes
+      - name: Verify jar contains compiled mod classes
         shell: bash
         run: |
           set -e
-          for jar in upstream/fabric/build/*/libs/*.jar; do
+          count=0
+          for jar in upstream/fabric/build/1.20.1/libs/*.jar; do
             case "$jar" in *-sources.jar|*-dev.jar) continue ;; esac
             echo "Checking $jar"
             jar tf "$jar" | grep -q '^dev/ultracraft/WorldMesh.class$'
             jar tf "$jar" | grep -q '^dev/ultracraft/Ultracraft.class$'
+            count=$((count+1))
           done
+          test "$count" -gt 0
 
-      - name: Collect jars
+      - name: Collect jar
         shell: bash
         run: |
           mkdir -p artifact
-          find upstream/fabric/build -type f -path '*/libs/*.jar' \
+          find upstream/fabric/build/1.20.1/libs -maxdepth 1 -type f -name '*.jar' \
             ! -name '*-sources.jar' \
             ! -name '*-dev.jar' \
             -exec cp {} artifact/ \;
           ls -lah artifact
 
-      - name: Upload optimized jars
+      - name: Upload optimized jar
         uses: actions/upload-artifact@v4
         with:
-          name: ultracraft-v1-performance-custom
+          name: ultracraft-v1-performance-custom-1.20.1
           path: artifact/*.jar
           if-no-files-found: error
           retention-days: 30
